@@ -78,12 +78,14 @@ impl Default for Board {
 }
 
 impl Board {
-    pub fn current_state(&self) -> &Position {
+    fn current_state(&self) -> &Position {
         self.states.last().expect("No current state")
     }
-    pub fn current_state_mut(&mut self) -> &mut Position {
+
+    fn current_state_mut(&mut self) -> &mut Position {
         self.states.last_mut().expect("No current state")
     }
+
     pub fn print_state(&self) {
         let state = self.current_state();
 
@@ -119,5 +121,67 @@ impl Board {
             print!("───┴")
         }
         println!("───┘");
+    }
+
+    fn load_fen(&mut self, fen: &str) {
+        let mut state = Position::default();
+
+        let mut fen_segments = fen.split_ascii_whitespace();
+
+        // first token: position
+        let mut token = fen_segments.next().expect("no position?");
+        let mut ranks = token.rsplit('/');
+        let mut i: Square = Square(0);
+        for rank in ranks.by_ref() {
+            let mut is_promoted = false;
+            for c in rank.chars() {
+                match c {
+                    '+' => {
+                        // promote next piece
+                        is_promoted = true;
+                    }
+                    'p' => {
+                        state.add_piece(
+                            i,
+                            Piece::new_unchecked(Piece::PAWN.raw() + (8 * is_promoted as u8), Piece::GOTE.raw()),
+                        );
+                        is_promoted = false;
+                        i += Square(1);
+                    }
+                    'P' => {
+                        state.add_piece(
+                            i,
+                            Piece::new_unchecked(Piece::PAWN.raw() + (8 * is_promoted as u8), Piece::SENTE.raw()),
+                        );
+                        is_promoted = false;
+                        i += Square(1);
+                    }
+                    'r' => {
+                        state.add_piece(
+                            i,
+                            Piece::new_unchecked(Piece::ROOK.raw() + (8 * is_promoted as u8), Piece::GOTE.raw()),
+                        );
+                        is_promoted = false;
+                        i += Square(1);
+                    }
+                    'R' => {
+                        state.add_piece(
+                            i,
+                            Piece::new_unchecked(Piece::ROOK.raw() + (8 * is_promoted as u8), Piece::SENTE.raw()),
+                        );
+                        is_promoted = false;
+                        i += Square(1);
+                    }
+                    _ => i += Square(c.to_digit(10).expect("invalid character in fen") as u8),
+                }
+            }
+        }
+
+        // second token: stm
+
+        // third token: hand
+        // nothing here yet
+
+        // fourth token: move count (optional)
     }
 }

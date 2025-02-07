@@ -24,6 +24,9 @@ impl Piece {
     pub const PROMO_SILVER: Piece = Self(13);
     pub const NONE: Piece = Self(14);
 
+    pub const SENTE: Piece = Self(0);
+    pub const GOTE: Piece = Self(1);
+
     #[must_use]
     pub const fn side(&self) -> u8 {
         self.0 >> 4
@@ -41,6 +44,10 @@ impl Piece {
 
     pub fn promote(&mut self) {
         self.0 += 8;
+    }
+
+    pub const fn raw(&self) -> u8 {
+        self.0
     }
 }
 

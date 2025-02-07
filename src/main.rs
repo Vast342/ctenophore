@@ -1,6 +1,9 @@
+use board::Board;
+
 pub mod board;
 pub mod types;
 
 fn main() {
-    println!("Hello, world!");
+    let board = Board::default();
+    board.print_state();
 }
