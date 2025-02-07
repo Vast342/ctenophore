@@ -2,6 +2,7 @@ use board::Board;
 use std::env;
 
 pub mod board;
+pub mod movegen;
 pub mod types;
 
 fn main() {

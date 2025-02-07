@@ -1,21 +1,3 @@
-/*
-    Anura
-    Copyright (C) 2024 Joseph Pasfield
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
-
 use std::fmt;
 use std::ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, Not, Shl, Shr};
 
@@ -26,7 +8,7 @@ use super::square::{Square, BOARD_LEN};
 
 // a mask for a single file on the board
 pub const FILEMASK: u128 =
-    0b1_000000001_000000001_000000001_000000001_000000001_000000001_000000001;
+    0b1_000000001_000000001_000000001_000000001_000000001_000000001_000000001_000000001;
 // a mask for a single rank on the board
 pub const RANKMASK: u128 = 0b111111111;
 
@@ -178,6 +160,19 @@ impl BitAndAssign for Bitboard {
 
 impl fmt::Display for Bitboard {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.0)
+        let value = self.0;
+        let mut res = "".to_owned();
+        for rank in (0..9).rev() {
+            for file in 0..9 {
+                let idx = rank * 9 + file;
+                if value & (1 << idx) != 0 {
+                    res += "1";
+                } else {
+                    res += "0";
+                }
+            }
+            res += "\n";
+        }
+        write!(f, "{}", res)
     }
 }

@@ -65,9 +65,9 @@ impl Position {
 
 #[derive(Debug, Clone)]
 pub struct Board {
-    pub states: Vec<Position>,
-    pub stm: u8,
-    pub ply: i16,
+    states: Vec<Position>,
+    stm: u8,
+    ply: i16,
 }
 
 impl Default for Board {
@@ -130,7 +130,10 @@ impl Board {
 
         println!("stm: {}", if self.stm == 0 { "sente" } else { "gote" });
         println!("sente hand: {}", state.hands[0]);
-        println!("gote hand: {}", state.hands[1].to_string().to_ascii_lowercase());
+        println!(
+            "gote hand: {}",
+            state.hands[1].to_string().to_ascii_lowercase()
+        );
         println!("ply count: {}", self.ply);
     }
 
