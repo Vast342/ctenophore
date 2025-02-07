@@ -19,7 +19,7 @@
 use std::fmt;
 use std::ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, Not, Shl, Shr};
 
-#[derive(Debug, Copy, Clone, Default, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct Bitboard(pub u128);
 
 use super::square::{Square, BOARD_LEN};
@@ -101,6 +101,12 @@ impl Bitboard {
     #[must_use]
     pub const fn contains_one(self) -> bool {
         !self.is_empty() && !self.contains_multiple()
+    }
+}
+
+impl Default for Bitboard {
+    fn default() -> Self {
+        Self::EMPTY
     }
 }
 

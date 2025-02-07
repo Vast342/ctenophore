@@ -9,19 +9,19 @@ pub const NUM_PIECE_TYPES: u8 = 8 + 6;
 
 impl Piece {
     pub const PAWN: Piece = Self(0);
-    pub const ROOK: Piece = Self(1);
-    pub const BISHOP: Piece = Self(2);
-    pub const LANCE: Piece = Self(3);
-    pub const KNIGHT: Piece = Self(4);
-    pub const SILVER: Piece = Self(5);
-    pub const KING: Piece = Self(6);
-    pub const GOLD: Piece = Self(7);
+    pub const LANCE: Piece = Self(1);
+    pub const KNIGHT: Piece = Self(2);
+    pub const SILVER: Piece = Self(3);
+    pub const BISHOP: Piece = Self(4);
+    pub const ROOK: Piece = Self(5);
+    pub const GOLD: Piece = Self(6);
+    pub const KING: Piece = Self(7);
     pub const PROMO_PAWN: Piece = Self(8);
-    pub const PROMO_ROOK: Piece = Self(9);
-    pub const PROMO_BISHOP: Piece = Self(10);
-    pub const PROMO_LANCE: Piece = Self(11);
-    pub const PROMO_KNIGHT: Piece = Self(12);
-    pub const PROMO_SILVER: Piece = Self(13);
+    pub const PROMO_LANCE: Piece = Self(9);
+    pub const PROMO_KNIGHT: Piece = Self(10);
+    pub const PROMO_SILVER: Piece = Self(11);
+    pub const PROMO_BISHOP: Piece = Self(12);
+    pub const PROMO_ROOK: Piece = Self(13);
     pub const NONE: Piece = Self(14);
 
     pub const SENTE: Piece = Self(0);
@@ -51,25 +51,24 @@ impl Piece {
     }
 }
 
-// this is for chess, redo later
 impl fmt::Display for Piece {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let c: &str = match self {
-            &Self::PAWN => "p",
-            &Self::ROOK => "r",
-            &Self::BISHOP => "b",
-            &Self::LANCE => "l",
-            &Self::KNIGHT => "n",
-            &Self::SILVER => "s",
-            &Self::GOLD => "g",
-            &Self::KING => "k",
-            &Self::PROMO_PAWN => "+p",
-            &Self::PROMO_ROOK => "+r",
-            &Self::PROMO_BISHOP => "+b",
-            &Self::PROMO_LANCE => "+l",
-            &Self::PROMO_KNIGHT => "+n",
-            &Self::PROMO_SILVER => "+p",
-            &Self::NONE => " ",
+        let c: &str = match Self(self.piece()) {
+            Self::PAWN => "p",
+            Self::LANCE => "l",
+            Self::KNIGHT => "n",
+            Self::SILVER => "s",
+            Self::GOLD => "g",
+            Self::KING => "k",
+            Self::BISHOP => "b",
+            Self::ROOK => "r",
+            Self::PROMO_PAWN => "+p",
+            Self::PROMO_LANCE => "+l",
+            Self::PROMO_KNIGHT => "+n",
+            Self::PROMO_SILVER => "+p",
+            Self::PROMO_BISHOP => "+b",
+            Self::PROMO_ROOK => "+r",
+            Self::NONE => " ",
             _ => panic!("invalid piece"),
         };
         let output: String = if self.side() == 0 {
