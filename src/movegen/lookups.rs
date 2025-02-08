@@ -1,4 +1,7 @@
-pub const KING_ATTACKS: [u128; 81] = [
+// functions to index the lookups
+
+// the lookups themselves
+const KING_ATTACKS: [u128; 81] = [
     1538,
     3589,
     7178,
@@ -81,7 +84,7 @@ pub const KING_ATTACKS: [u128; 81] = [
     1515289345190797407944704,
     608004684669466821263360,
 ];
-pub const KNIGHT_ATTACKS: [[u128; 81]; 2] = [
+const KNIGHT_ATTACKS: [[u128; 81]; 2] = [
     [
         524288,
         1310720,
@@ -249,7 +252,7 @@ pub const KNIGHT_ATTACKS: [[u128; 81]; 2] = [
         2305843009213693952,
     ],
 ];
-pub const SILVER_ATTACKS: [[u128; 81]; 2] = [
+const SILVER_ATTACKS: [[u128; 81]; 2] = [
     [
         1536,
         3584,
@@ -417,7 +420,7 @@ pub const SILVER_ATTACKS: [[u128; 81]; 2] = [
         3541774862152233910272,
     ],
 ];
-pub const GOLD_ATTACKS: [[u128; 81]; 2] = [
+const GOLD_ATTACKS: [[u128; 81]; 2] = [
     [
         1538,
         3589,
