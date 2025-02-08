@@ -1,4 +1,21 @@
+use crate::types::{bitboard::Bitboard, square::Square};
+
 // functions to index the lookups
+pub const fn get_king_attacks_internal(sq: Square) -> Bitboard {
+    Bitboard(KING_ATTACKS[sq.as_usize()])
+}
+
+pub const fn get_knight_attacks_internal(sq: Square, stm: u8) -> Bitboard {
+    Bitboard(KNIGHT_ATTACKS[stm as usize][sq.as_usize()])
+}
+
+pub const fn get_silver_attacks_internal(sq: Square, stm: u8) -> Bitboard {
+    Bitboard(SILVER_ATTACKS[stm as usize][sq.as_usize()])
+}
+
+pub const fn get_gold_attacks_internal(sq: Square, stm: u8) -> Bitboard {
+    Bitboard(GOLD_ATTACKS[stm as usize][sq.as_usize()])
+}
 
 // the lookups themselves
 const KING_ATTACKS: [u128; 81] = [

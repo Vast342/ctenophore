@@ -166,9 +166,9 @@ impl fmt::Display for Bitboard {
             for file in 0..9 {
                 let idx = rank * 9 + file;
                 if value & (1 << idx) != 0 {
-                    res += "1";
+                    res += "█";
                 } else {
-                    res += "0";
+                    res += "∙";
                 }
             }
             res += "\n";
