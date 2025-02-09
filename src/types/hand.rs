@@ -63,7 +63,7 @@ impl Hand {
 
     // current number
     pub fn num(&self, piece: Piece) -> u8 {
-        let piece_type = piece.piece() as usize;
+        let piece_type = piece.piece().as_usize();
         ((self.0 & Self::MASKS[piece_type]) >> Self::OFFSETS[piece_type]) as u8
     }
 
@@ -79,9 +79,30 @@ impl Hand {
 
     // set value to something
     pub fn set(&mut self, piece: Piece, new_count: u32) {
-        let piece_type = piece.piece() as usize;
+        let piece_type = piece.piece().as_usize();
         self.0 = (self.0 & !Self::MASKS[piece_type]) | (new_count << Self::OFFSETS[piece_type])
     }
+
+    pub fn is_empty(&self) -> bool {
+        self.0 == 0
+    }
+}
+
+impl IntoIterator for Hand {
+    type Item = (Piece, u8);
+    type IntoIter = HandIter;
+
+    fn into_iter(self) -> Self::IntoIter {
+        HandIter {
+            hand: self,
+            current_piece: 0,
+        }
+    }
+}
+
+pub struct HandIter {
+    hand: Hand,
+    current_piece: usize,
 }
 
 // ignores capitalisation for now
@@ -94,5 +115,22 @@ impl fmt::Display for Hand {
         }
 
         write!(f, "{output}")
+    }
+}
+
+impl Iterator for HandIter {
+    type Item = (Piece, u8);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        while self.current_piece < 7 {
+            let piece = Piece(self.current_piece as u8);
+            let count = self.hand.num(piece);
+            self.current_piece += 1;
+
+            if count > 0 {
+                return Some((piece, count));
+            }
+        }
+        None
     }
 }

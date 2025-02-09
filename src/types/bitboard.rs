@@ -14,6 +14,7 @@ pub const RANKMASK: u128 = 0b111111111;
 
 impl Bitboard {
     pub const EMPTY: Self = Self(0);
+    pub const FULL: Self = Self((1 << 81) - 1);
 
     #[must_use]
     pub const fn from_square(sq: Square) -> Self {
@@ -76,13 +77,35 @@ impl Bitboard {
     }
 
     #[must_use]
-    pub const fn contains_multiple(self) -> bool {
+    pub const fn contains_multiple(&self) -> bool {
         (self.0 & self.0.wrapping_sub(1)) != 0
     }
 
     #[must_use]
-    pub const fn contains_one(self) -> bool {
+    pub const fn contains_one(&self) -> bool {
         !self.is_empty() && !self.contains_multiple()
+    }
+
+    pub fn fill_upwards(&self) -> Bitboard {
+        let mut board = Bitboard(self.0);
+        board |= board << 9;
+        board |= board << 18;
+        board |= board << 36;
+        board |= board << 72;
+        board & Self::FULL
+    }
+
+    pub fn fill_downwards(&self) -> Bitboard {
+        let mut board = Bitboard(self.0);
+        board |= board >> 9;
+        board |= board >> 18;
+        board |= board >> 36;
+        board |= board >> 72;
+        board & Self::FULL
+    }
+
+    pub fn file_fill(&self) -> Bitboard {
+        self.fill_upwards() | self.fill_downwards()
     }
 }
 
@@ -166,13 +189,39 @@ impl fmt::Display for Bitboard {
             for file in 0..9 {
                 let idx = rank * 9 + file;
                 if value & (1 << idx) != 0 {
-                    res += "█";
+                    res += "1";
                 } else {
-                    res += "∙";
+                    res += "0";
                 }
             }
             res += "\n";
         }
         write!(f, "{}", res)
+    }
+}
+
+impl IntoIterator for Bitboard {
+    type Item = Square;
+    type IntoIter = Biterator;
+
+    #[must_use]
+    fn into_iter(self) -> Self::IntoIter {
+        Biterator { board: self }
+    }
+}
+
+pub struct Biterator {
+    board: Bitboard,
+}
+
+impl Iterator for Biterator {
+    type Item = Square;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.board.is_empty() {
+            None
+        } else {
+            Some(Square(self.board.pop_lsb()))
+        }
     }
 }

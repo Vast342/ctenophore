@@ -9,6 +9,7 @@ lto = true
 codegen-units = 1
 
 [dependencies]
+arrayvec = "0.7.6"
 
 [features]
 pext = []

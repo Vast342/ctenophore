@@ -16,12 +16,17 @@ impl Square {
 
     #[must_use]
     pub const fn file(&self) -> u8 /* i refuse to write a file wrapper */ {
-        self.0 & 0b111
+        self.0 % BOARD_LEN
     }
 
     #[must_use]
     pub const fn as_usize(&self) -> usize {
         self.0 as usize
+    }
+
+    #[must_use]
+    pub const fn as_u16(&self) -> u16 {
+        self.0 as u16
     }
 
     #[must_use]

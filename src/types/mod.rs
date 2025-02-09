@@ -1,3 +1,4 @@
+pub mod action;
 pub mod bitboard;
 pub mod hand;
 pub mod piece;

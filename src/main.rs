@@ -24,4 +24,15 @@ fn main() {
     println!("{}", b_atk);
     let l_atk = get_lance_attacks(Square(8), occ, 0);
     println!("{}", l_atk);
+
+    println!("position startpos");
+    board.load_fen("lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL b - 1");
+    board.print_state();
+
+    println!("Movegen Test:");
+    let actions = board.get_actions();
+    for action in &actions {
+        println!("{}", action);
+    }
+    println!("total: {}", actions.len());
 }

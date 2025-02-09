@@ -1,7 +1,7 @@
 use core::panic;
 use std::fmt;
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Piece(pub u8);
 
 //                            real  promoted
@@ -33,13 +33,13 @@ impl Piece {
     }
 
     #[must_use]
-    pub const fn piece(&self) -> u8 {
-        self.0 & 0b01111
+    pub const fn piece(&self) -> Self {
+        Self(self.0 & 0b01111)
     }
 
     #[must_use]
-    pub fn new_unchecked(piece: u8, color: u8) -> Self {
-        Self((color << 4) | piece)
+    pub fn new_unchecked(piece: u8, side: u8) -> Self {
+        Self((side << 4) | piece)
     }
 
     pub fn promote(&mut self) {
@@ -49,11 +49,19 @@ impl Piece {
     pub const fn raw(&self) -> u8 {
         self.0
     }
+
+    pub const fn as_usize(&self) -> usize {
+        self.0 as usize
+    }
+
+    pub const fn as_stm(&self, stm: u8) -> Self {
+        Self(self.0 | (stm << 4))
+    }
 }
 
 impl fmt::Display for Piece {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let c: &str = match Self(self.piece()) {
+        let c: &str = match self.piece() {
             Self::PAWN => "p",
             Self::LANCE => "l",
             Self::KNIGHT => "n",

@@ -1,8 +1,15 @@
-use crate::types::{
-    bitboard::Bitboard,
-    hand::Hand,
-    piece::{Piece, NUM_PIECE_TYPES},
-    square::{Square, NUM_SQUARES},
+use crate::{
+    movegen::{
+        get_bishop_attacks, get_gold_attacks, get_king_attacks, get_knight_attacks,
+        get_lance_attacks, get_rook_attacks, get_silver_attacks, setwise_pawns,
+    },
+    types::{
+        action::{Action, Actionlist},
+        bitboard::Bitboard,
+        hand::Hand,
+        piece::{Piece, NUM_PIECE_TYPES},
+        square::{Square, NUM_SQUARES},
+    },
 };
 
 #[derive(Debug, Clone)]
@@ -28,14 +35,14 @@ impl Position {
     pub fn add_piece(&mut self, sq: Square, piece: Piece) {
         let bitboard_square: Bitboard = Bitboard::from_square(sq);
         self.sides[piece.side() as usize] ^= bitboard_square;
-        self.pieces[piece.piece() as usize] ^= bitboard_square;
+        self.pieces[piece.piece().as_usize()] ^= bitboard_square;
         self.mailbox[sq.as_usize()] = piece;
     }
 
     pub fn remove_piece(&mut self, sq: Square, piece: Piece) {
         let bitboard_square: Bitboard = Bitboard::from_square(sq);
         self.sides[piece.side() as usize] ^= bitboard_square;
-        self.pieces[piece.piece() as usize] ^= bitboard_square;
+        self.pieces[piece.piece().as_usize()] ^= bitboard_square;
         self.mailbox[sq.as_usize()] = Piece::NONE;
     }
 
@@ -468,5 +475,104 @@ impl Board {
         }
 
         self.states.push(state);
+    }
+    pub fn get_actions(&self) -> Actionlist {
+        let state = self.current_state();
+        let mut actions = Actionlist::default();
+        let occ = state.occupied();
+        let us = state.sides[self.stm as usize];
+
+        for sq in us {
+            let piece = state.piece_on_square(sq);
+            let mut attacks = match piece.piece() {
+                Piece::PAWN => Bitboard::EMPTY,
+                Piece::LANCE => get_lance_attacks(sq, occ, self.stm),
+                Piece::KNIGHT => get_knight_attacks(sq, self.stm),
+                Piece::SILVER => get_silver_attacks(sq, self.stm),
+                Piece::BISHOP => get_bishop_attacks(sq, occ),
+                Piece::ROOK => get_rook_attacks(sq, occ),
+                Piece::GOLD
+                | Piece::PROMO_PAWN
+                | Piece::PROMO_LANCE
+                | Piece::PROMO_KNIGHT
+                | Piece::PROMO_SILVER => get_gold_attacks(sq, self.stm),
+                Piece::KING => get_king_attacks(sq),
+                Piece::PROMO_BISHOP => get_bishop_attacks(sq, occ) | get_king_attacks(sq),
+                Piece::PROMO_ROOK => get_rook_attacks(sq, occ) | get_king_attacks(sq),
+                _ => panic!("invalid piece"),
+            };
+
+            // no taking our own pieces
+            attacks &= !us;
+
+            // parse to actions
+            for bit in attacks {
+                if piece.piece() < Piece::GOLD
+                    && ((self.stm == 0 && bit >= Square(54)) || (self.stm == 1 && bit < Square(27)))
+                {
+                    actions.push(Action::new_move(sq, bit, true));
+                }
+                actions.push(Action::new_move(sq, bit, false));
+            }
+        }
+
+        // setwise pawns
+        let our_pawns = us & state.pieces[Piece::PAWN.as_usize()];
+        let mut pawn_attacks = setwise_pawns(our_pawns, self.stm);
+
+        // no taking our own pieces
+        pawn_attacks &= !us;
+
+        // parse to actions
+        for bit in pawn_attacks {
+            let og = Square((bit.as_u16() as i16 + if self.stm == 0 { -9 } else { 9 }) as u8);
+            if (self.stm == 0 && bit >= Square(54)) || (self.stm == 1 && bit < Square(27)) {
+                actions.push(Action::new_move(og, bit, true));
+            }
+            actions.push(Action::new_move(og, bit, false));
+        }
+
+        // drops
+        let hand = state.hands[self.stm as usize];
+        let empty = !occ & Bitboard::FULL;
+        for (piece, _count) in hand {
+            let open_squares = if piece.piece() == Piece::PAWN {
+                // no back ranks, no overlapping files, no checkmates (not handled yet)
+                let free_files = !our_pawns.file_fill();
+                let free_squares = if self.stm == 0 {
+                    free_files >> 9
+                } else {
+                    free_files << 9
+                };
+                empty & free_squares
+            } else if piece.piece() == Piece::KNIGHT {
+                // no back 2 ranks
+                let free_squares = if self.stm == 0 {
+                    Bitboard::FULL >> 18
+                } else {
+                    Bitboard::FULL << 18
+                };
+                empty & free_squares
+            } else if piece.piece() == Piece::LANCE {
+                // no back ranks
+                let free_squares = if self.stm == 0 {
+                    Bitboard::FULL >> 9
+                } else {
+                    Bitboard::FULL << 9
+                };
+                empty & free_squares
+            } else {
+                empty
+            };
+
+            for sq in open_squares {
+                actions.push(Action::new_drop(piece.as_stm(self.stm), sq));
+            }
+        }
+
+        actions
+    }
+    pub fn piece_on_square(&self, sq: Square) -> Piece {
+        self.current_state().piece_on_square(sq)
     }
 }
