@@ -2,7 +2,7 @@ use std::io;
 
 use crate::{
     board::Board,
-    perft::{perft, split_perft},
+    perft::{perft, split_perft}, types::action::Actionlist,
 };
 
 #[derive(Default)]
@@ -82,6 +82,14 @@ impl UsiManager {
         let second_token = command_split.next().expect("not enough tokens");
         let index: usize = second_token.parse::<usize>().expect("invalid index");
         let list = self.board.get_actions();
-        self.board.perform_action(list[index]);
+        // legality check
+        let mut list2 = Actionlist::new();
+        for action in &list {
+            if self.board.perform_action(*action) {
+                self.board.undo_action();
+                list2.push(*action);
+            }
+        }
+        self.board.perform_action(list2[index]);
     }
 }

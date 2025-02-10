@@ -462,12 +462,19 @@ impl Board {
                 {
                     actions.push(Action::new_move(sq, bit, true));
                 }
-                actions.push(Action::new_move(sq, bit, false));
+                if !(piece.piece() == Piece::LANCE
+                    && ((self.stm == 0 && bit >= Square(72)) || (self.stm == 1 && bit < Square(9))))
+                    && !(piece.piece() == Piece::KNIGHT
+                        && ((self.stm == 0 && bit >= Square(63))
+                            || (self.stm == 1 && bit < Square(18))))
+                {
+                    actions.push(Action::new_move(sq, bit, false));
+                }
             }
         }
 
         // setwise pawns
-        let our_pawns = us & state.pieces[Piece::PAWN.as_usize()];
+        let our_pawns = state.sided_piece(Piece::PAWN.as_usize() as u8, self.stm);
         let mut pawn_attacks = setwise_pawns(our_pawns, self.stm);
 
         // no taking our own pieces
@@ -491,7 +498,7 @@ impl Board {
         for (piece, _count) in hand {
             let open_squares = if piece.piece() == Piece::PAWN {
                 // no back ranks, no overlapping files, no checkmates (not handled yet)
-                let free_files = !our_pawns.file_fill();
+                let free_files = !our_pawns.file_fill() & Bitboard::FULL;
                 let free_squares = if self.stm == 0 {
                     free_files >> 9
                 } else {
