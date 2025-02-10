@@ -12,12 +12,13 @@ use crate::{
     },
 };
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct Position {
     sides: [Bitboard; 2],
     pieces: [Bitboard; NUM_PIECE_TYPES as usize],
     mailbox: [Piece; NUM_SQUARES as usize],
     hands: [Hand; 2],
+    checkers: Bitboard,
 }
 
 impl Default for Position {
@@ -27,6 +28,7 @@ impl Default for Position {
             pieces: [Bitboard::default(); NUM_PIECE_TYPES as usize],
             mailbox: [Piece::default(); NUM_SQUARES as usize],
             hands: [Hand::default(); 2],
+            checkers: Bitboard::EMPTY,
         }
     }
 }
@@ -347,115 +349,59 @@ impl Board {
             for c in token.chars() {
                 match c {
                     'p' => {
-                        state.hands[1].set(
-                            Piece::new_unchecked(Piece::PAWN.raw(), Piece::GOTE.raw()),
-                            count,
-                        );
+                        state.hands[1].set(Piece::PAWN, count);
                         count = 1;
                     }
                     'P' => {
-                        state.hands[0].set(
-                            Piece::new_unchecked(Piece::PAWN.raw(), Piece::SENTE.raw()),
-                            count,
-                        );
+                        state.hands[0].set(Piece::PAWN, count);
                         count = 1;
                     }
                     'l' => {
-                        state.hands[1].set(
-                            Piece::new_unchecked(Piece::LANCE.raw(), Piece::GOTE.raw()),
-                            count,
-                        );
+                        state.hands[1].set(Piece::LANCE, count);
                         count = 1;
                     }
                     'L' => {
-                        state.hands[0].set(
-                            Piece::new_unchecked(Piece::LANCE.raw(), Piece::SENTE.raw()),
-                            count,
-                        );
+                        state.hands[0].set(Piece::LANCE, count);
                         count = 1;
                     }
                     'n' => {
-                        state.hands[1].set(
-                            Piece::new_unchecked(Piece::KNIGHT.raw(), Piece::GOTE.raw()),
-                            count,
-                        );
+                        state.hands[1].set(Piece::KNIGHT, count);
                         count = 1;
                     }
                     'N' => {
-                        state.hands[0].set(
-                            Piece::new_unchecked(Piece::KNIGHT.raw(), Piece::SENTE.raw()),
-                            count,
-                        );
+                        state.hands[0].set(Piece::KNIGHT, count);
                         count = 1;
                     }
                     's' => {
-                        state.hands[1].set(
-                            Piece::new_unchecked(Piece::SILVER.raw(), Piece::GOTE.raw()),
-                            count,
-                        );
+                        state.hands[1].set(Piece::SILVER, count);
                         count = 1;
                     }
                     'S' => {
-                        state.hands[0].set(
-                            Piece::new_unchecked(Piece::SILVER.raw(), Piece::SENTE.raw()),
-                            count,
-                        );
+                        state.hands[0].set(Piece::SILVER, count);
                         count = 1;
                     }
                     'g' => {
-                        state.hands[1].set(
-                            Piece::new_unchecked(Piece::GOLD.raw(), Piece::GOTE.raw()),
-                            count,
-                        );
+                        state.hands[1].set(Piece::GOLD, count);
                         count = 1;
                     }
                     'G' => {
-                        state.hands[0].set(
-                            Piece::new_unchecked(Piece::GOLD.raw(), Piece::SENTE.raw()),
-                            count,
-                        );
+                        state.hands[0].set(Piece::GOLD, count);
                         count = 1;
                     }
                     'b' => {
-                        state.hands[1].set(
-                            Piece::new_unchecked(Piece::BISHOP.raw(), Piece::GOTE.raw()),
-                            count,
-                        );
+                        state.hands[1].set(Piece::BISHOP, count);
                         count = 1;
                     }
                     'B' => {
-                        state.hands[0].set(
-                            Piece::new_unchecked(Piece::BISHOP.raw(), Piece::SENTE.raw()),
-                            count,
-                        );
+                        state.hands[0].set(Piece::BISHOP, count);
                         count = 1;
                     }
                     'r' => {
-                        state.hands[1].set(
-                            Piece::new_unchecked(Piece::ROOK.raw(), Piece::GOTE.raw()),
-                            count,
-                        );
+                        state.hands[1].set(Piece::ROOK, count);
                         count = 1;
                     }
                     'R' => {
-                        state.hands[0].set(
-                            Piece::new_unchecked(Piece::ROOK.raw(), Piece::SENTE.raw()),
-                            count,
-                        );
-                        count = 1;
-                    }
-                    'k' => {
-                        state.hands[1].set(
-                            Piece::new_unchecked(Piece::KING.raw(), Piece::GOTE.raw()),
-                            count,
-                        );
-                        count = 1;
-                    }
-                    'K' => {
-                        state.hands[0].set(
-                            Piece::new_unchecked(Piece::KING.raw(), Piece::SENTE.raw()),
-                            count,
-                        );
+                        state.hands[0].set(Piece::ROOK, count);
                         count = 1;
                     }
                     // sets the count to use for next time
@@ -475,6 +421,7 @@ impl Board {
         }
 
         self.states.push(state);
+        self.update_checkers();
     }
     pub fn get_actions(&self) -> Actionlist {
         let state = self.current_state();
@@ -508,7 +455,10 @@ impl Board {
             // parse to actions
             for bit in attacks {
                 if piece.piece() < Piece::GOLD
-                    && ((self.stm == 0 && bit >= Square(54)) || (self.stm == 1 && bit < Square(27)))
+                    && (((self.stm == 0 && bit >= Square(54))
+                        || (self.stm == 1 && bit < Square(27)))
+                        || ((self.stm == 0 && sq >= Square(54))
+                            || (self.stm == 1 && sq < Square(27))))
                 {
                     actions.push(Action::new_move(sq, bit, true));
                 }
@@ -529,7 +479,10 @@ impl Board {
             if (self.stm == 0 && bit >= Square(54)) || (self.stm == 1 && bit < Square(27)) {
                 actions.push(Action::new_move(og, bit, true));
             }
-            actions.push(Action::new_move(og, bit, false));
+            // don't generate pawn promos if it's last row
+            if !((self.stm == 0 && bit >= Square(72)) || (self.stm == 1 && bit < Square(9))) {
+                actions.push(Action::new_move(og, bit, false));
+            }
         }
 
         // drops
@@ -574,5 +527,95 @@ impl Board {
     }
     pub fn piece_on_square(&self, sq: Square) -> Piece {
         self.current_state().piece_on_square(sq)
+    }
+
+    pub fn get_attackers(&self, sq: Square) -> Bitboard {
+        let opps = 1 - self.stm;
+        let pawn_atk_bb = Bitboard::from_square(Square(
+            (sq.as_u16() as i32 + if self.stm == 0 { 9 } else { -9 }) as u8,
+        ));
+        let state = self.current_state();
+        let occ = state.occupied();
+        let gold_movers = state.sided_piece(Piece::GOLD.raw(), opps)
+            | state.sided_piece(Piece::PROMO_PAWN.raw(), opps)
+            | state.sided_piece(Piece::PROMO_LANCE.raw(), opps)
+            | state.sided_piece(Piece::PROMO_KNIGHT.raw(), opps)
+            | state.sided_piece(Piece::PROMO_SILVER.raw(), opps);
+        (pawn_atk_bb & state.sided_piece(Piece::PAWN.raw(), opps))
+            | (get_lance_attacks(sq, occ, self.stm) & state.sided_piece(Piece::LANCE.raw(), opps))
+            | (get_knight_attacks(sq, self.stm) & state.sided_piece(Piece::KNIGHT.raw(), opps))
+            | (get_silver_attacks(sq, self.stm) & state.sided_piece(Piece::SILVER.raw(), opps))
+            | (get_bishop_attacks(sq, occ)
+                & (state.sided_piece(Piece::BISHOP.raw(), opps)
+                    | state.sided_piece(Piece::PROMO_BISHOP.raw(), opps)))
+            | (get_rook_attacks(sq, occ)
+                & (state.sided_piece(Piece::ROOK.raw(), opps)
+                    | state.sided_piece(Piece::PROMO_ROOK.raw(), opps)))
+            | (get_king_attacks(sq)
+                & (state.sided_piece(Piece::KING.raw(), opps)
+                    | state.sided_piece(Piece::PROMO_BISHOP.raw(), opps)
+                    | state.sided_piece(Piece::PROMO_ROOK.raw(), opps)))
+            | (get_gold_attacks(sq, self.stm) & gold_movers)
+    }
+
+    pub fn in_check(&self) -> bool {
+        !self.current_state().checkers.is_empty()
+    }
+
+    pub fn king_sq(&self) -> Square {
+        let state = self.current_state();
+        let our_king = state.sided_piece(Piece::KING.raw(), self.stm);
+        Square(our_king.lsb())
+    }
+
+    pub fn update_checkers(&mut self) {
+        let king_sq = self.king_sq();
+        let king_atkers = self.get_attackers(king_sq);
+        let state = self.current_state_mut();
+        state.checkers = king_atkers;
+    }
+
+    pub fn perform_action(&mut self, action: Action) -> bool {
+        self.states.push(*self.current_state());
+        // just like in anura, not using self.current_state_mut() because of borrowing shenanigans
+        let state = self.states.last_mut().expect("no position");
+        if action.is_drop() {
+            let to = action.to();
+            let piece = action.piece();
+            state.add_piece(to, piece);
+            state.hands[self.stm as usize].dec(piece.unpromote());
+        } else {
+            let from = action.from();
+            let to = action.to();
+            let piece = state.piece_on_square(from);
+            let victim = state.piece_on_square(to);
+            state.remove_piece(from, piece);
+            if victim != Piece::NONE {
+                state.remove_piece(to, victim);
+                state.hands[self.stm as usize].inc(victim.unpromote())
+            }
+            if action.is_promo() {
+                state.add_piece(to, piece.promote());
+            } else {
+                state.add_piece(to, piece);
+            }
+        }
+
+        self.ply += 1;
+        // legality check
+        if !self.get_attackers(self.king_sq()).is_empty() {
+            self.undo_action();
+            self.stm = 1 - self.stm;
+            false
+        } else {
+            self.stm = 1 - self.stm;
+            true
+        }
+    }
+
+    pub fn undo_action(&mut self) {
+        self.states.pop();
+        self.ply -= 1;
+        self.stm = 1 - self.stm;
     }
 }

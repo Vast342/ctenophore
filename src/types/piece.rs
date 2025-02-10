@@ -42,8 +42,16 @@ impl Piece {
         Self((side << 4) | piece)
     }
 
-    pub fn promote(&mut self) {
-        self.0 += 8;
+    pub fn promote(&self) -> Piece {
+        Piece(self.0 + 8)
+    }
+
+    pub fn unpromote(&self) -> Piece {
+        if self.piece() >= Self::PROMO_PAWN {
+            Piece(self.0 - 8)
+        } else {
+            *self
+        }
     }
 
     pub const fn raw(&self) -> u8 {
