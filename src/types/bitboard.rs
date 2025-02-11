@@ -12,6 +12,9 @@ pub const FILEMASK: u128 =
 // a mask for a single rank on the board
 pub const RANKMASK: u128 = 0b111111111;
 
+const HI_BITS: u128 = 0xFFFFFFFFFFFFFFFF0000000000000000;
+const LOW_BITS: u128 = 0x0000000000000000FFFFFFFFFFFFFFFF;
+
 impl Bitboard {
     pub const EMPTY: Self = Self(0);
     pub const FULL: Self = Self((1 << 81) - 1);
@@ -106,6 +109,38 @@ impl Bitboard {
 
     pub fn file_fill(&self) -> Bitboard {
         self.fill_upwards() | self.fill_downwards()
+    }
+
+    pub const fn const_and(&self, rhs: Self) -> Bitboard {
+        Bitboard(self.0 & rhs.0)
+    }
+
+    pub const fn const_neg(&self) -> Bitboard {
+        Bitboard(self.0.wrapping_neg())
+    }
+
+    pub const fn const_or(&self, rhs: Self) -> Bitboard {
+        Bitboard(self.0 | rhs.0)
+    }
+
+    pub const fn const_sub(&self, rhs: Self) -> Bitboard {
+        Bitboard(self.0 - rhs.0)
+    }
+
+    pub const fn const_shl(&self, shift: u8) -> Bitboard {
+        Bitboard(self.0 << shift)
+    }
+
+    pub const fn const_xor(&self, rhs: Self) -> Bitboard {
+        Bitboard(self.0 ^ rhs.0)
+    }
+
+    pub const fn hi_bits(&self) -> u64 {
+        ((self.0 & HI_BITS) >> 64) as u64
+    }
+
+    pub const fn lo_bits(&self) -> u64 {
+        (self.0 & LOW_BITS) as u64
     }
 }
 

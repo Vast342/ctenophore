@@ -2,7 +2,8 @@ use std::io;
 
 use crate::{
     board::Board,
-    perft::{perft, split_perft}, types::action::Actionlist,
+    perft::{perft, split_perft},
+    types::action::Actionlist,
 };
 
 #[derive(Default)]
