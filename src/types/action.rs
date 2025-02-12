@@ -35,7 +35,7 @@ impl Action {
     }
 
     pub const fn piece(&self) -> Piece {
-        Piece((self.0 >> FROM_OFFSET) as u8)
+        Piece(((self.0 >> FROM_OFFSET) & SQUARE_MASK) as u8)
     }
 
     pub const fn is_promo(&self) -> bool {
@@ -73,7 +73,12 @@ impl fmt::Display for Action {
         let to_rank = (b'i' - to_square.rank()) as char;
 
         let output = if self.is_drop() {
-            format!("{}*{}{}", self.piece(), to_file, to_rank)
+            format!(
+                "{}*{}{}",
+                self.piece().to_string().to_ascii_uppercase(),
+                to_file,
+                to_rank
+            )
         } else {
             let from_square = self.from();
             let from_file = 9 - from_square.file();

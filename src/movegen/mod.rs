@@ -1,18 +1,20 @@
-mod classical;
-// FOR NOW, ALSO GET RID OF THIS WHEN YOU DO MAGICS BECAUSE BLOCKER MASKS WILL BE IN USE
-#[allow(dead_code)]
 mod lookups;
-//mod pext;
-//mod magic;
+
+#[cfg(not(feature = "pext"))]
+mod magic;
+
+#[cfg(feature = "pext")]
+mod pext;
 
 // when doing pext and magic i'll use #[cfg()] and then #[not(cfg())], if feature pext, use pext, if not, use magic
-use classical::{
-    get_bishop_attacks_internal, get_lance_attacks_internal, get_rook_attacks_internal,
-};
 use lookups::{
     get_gold_attacks_internal, get_king_attacks_internal, get_knight_attacks_internal,
     get_silver_attacks_internal,
 };
+#[cfg(not(feature = "pext"))]
+use magic::{get_bishop_attacks_internal, get_lance_attacks_internal, get_rook_attacks_internal};
+#[cfg(feature = "pext")]
+use pext::{get_bishop_attacks_internal, get_lance_attacks_internal, get_rook_attacks_internal};
 
 use crate::types::{bitboard::Bitboard, square::Square};
 
