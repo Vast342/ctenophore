@@ -12,9 +12,6 @@ pub const FILEMASK: u128 =
 // a mask for a single rank on the board
 pub const RANKMASK: u128 = 0b111111111;
 
-const HI_BITS: u128 = 0xFFFFFFFFFFFFFFFF0000000000000000;
-const LOW_BITS: u128 = 0x0000000000000000FFFFFFFFFFFFFFFF;
-
 impl Bitboard {
     pub const EMPTY: Self = Self(0);
     pub const FULL: Self = Self((1 << 81) - 1);
@@ -136,11 +133,11 @@ impl Bitboard {
     }
 
     pub const fn hi_bits(&self) -> u64 {
-        ((self.0 & HI_BITS) >> 64) as u64
+        (self.0 >> 64) as u64
     }
 
     pub const fn lo_bits(&self) -> u64 {
-        (self.0 & LOW_BITS) as u64
+        self.0 as u64
     }
 }
 
