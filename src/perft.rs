@@ -7,12 +7,11 @@ pub fn split_perft(board: &mut Board, depth: u8) {
     let mut count = 0;
     let start = Instant::now();
     for action in &actions {
-        if board.perform_action(*action) {
-            let result = perft_internal(board, depth - 1);
-            println!("{} : {}", action, result);
-            board.undo_action();
-            count += result;
-        }
+        board.perform_action(*action);
+        let result = perft_internal(board, depth - 1);
+        println!("{} : {}", action, result);
+        board.undo_action();
+        count += result;
     }
     println!(
         "{} nodes {} nps",
@@ -38,10 +37,9 @@ fn perft_internal(board: &mut Board, depth: u8) -> u64 {
     let actions = board.get_actions();
     let mut count = 0;
     for action in &actions {
-        if board.perform_action(*action) {
-            count += perft_internal(board, depth - 1);
-            board.undo_action();
-        }
+        board.perform_action(*action);
+        count += perft_internal(board, depth - 1);
+        board.undo_action();
     }
     count
 }

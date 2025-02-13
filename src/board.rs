@@ -582,7 +582,7 @@ impl Board {
         state.checkers = king_atkers;
     }
 
-    pub fn perform_action(&mut self, action: Action) -> bool {
+    pub fn perform_action(&mut self, action: Action) {
         self.states.push(*self.current_state());
         // just like in anura, not using self.current_state_mut() because of borrowing shenanigans
         let state = self.states.last_mut().expect("no position");
@@ -609,15 +609,7 @@ impl Board {
         }
 
         self.ply += 1;
-        // legality check
-        if !self.get_attackers(self.king_sq()).is_empty() {
-            self.undo_action();
-            self.stm = 1 - self.stm;
-            false
-        } else {
-            self.stm = 1 - self.stm;
-            true
-        }
+        self.stm = 1 - self.stm;
     }
 
     pub fn undo_action(&mut self) {

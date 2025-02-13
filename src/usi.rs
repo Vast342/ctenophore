@@ -3,7 +3,7 @@ use std::io;
 use crate::{
     board::Board,
     perft::{perft, split_perft},
-    types::action::Actionlist,
+    types::action::Action,
 };
 
 #[derive(Default)]
@@ -76,21 +76,18 @@ impl UsiManager {
         }
         self.board = Board::default();
         self.board.load_fen(&fen);
+        if let Some(_moves_token) = command_split.next() {
+            // loop through the rest of the moves
+            for move_text in command_split {
+                let mov= Action::from_usi(move_text);
+                self.board.perform_action(mov);
+            }
+        }
     }
     fn make_move(&mut self, command_msg: &str) {
         let mut command_split = command_msg.split_ascii_whitespace();
         let _first_token = command_split.next().expect("not enough tokens");
         let second_token = command_split.next().expect("not enough tokens");
-        let index: usize = second_token.parse::<usize>().expect("invalid index");
-        let list = self.board.get_actions();
-        // legality check
-        let mut list2 = Actionlist::new();
-        for action in &list {
-            if self.board.perform_action(*action) {
-                self.board.undo_action();
-                list2.push(*action);
-            }
-        }
-        self.board.perform_action(list2[index]);
+        self.board.perform_action(Action::from_usi(second_token));
     }
 }

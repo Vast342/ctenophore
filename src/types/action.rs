@@ -25,6 +25,42 @@ impl Action {
         Self(to.as_u16() | ((piece.raw() as u16) << FROM_OFFSET) | (1 << DROP_OFFSET))
     }
 
+    pub fn from_usi(usi: &str) -> Self {
+        let chars = usi.chars().collect::<Vec<char>>();
+        if chars[1] == '*' {
+            // drops
+            let piece = match chars[0].to_ascii_uppercase() {
+                'P' => Piece::PAWN,
+                'L' => Piece::LANCE,
+                'N' => Piece::KNIGHT,
+                'S' => Piece::SILVER,
+                'G' => Piece::GOLD,
+                'B' => Piece::BISHOP,
+                'R' => Piece::ROOK,
+                _ => panic!("invalid dropped piece"),
+            };
+
+            let to_file = 9 - (chars[2].to_digit(10).unwrap() as u8);
+            let to_rank = b'i' - (chars[3] as u8);
+            let to = Square::from_rf(to_rank, to_file);
+
+            Self::new_drop(piece, to)
+        } else {
+            // normal move
+            let from_file = 9 - (chars[0].to_digit(10).unwrap() as u8);
+            let from_rank = b'i' - (chars[1] as u8);
+            let from = Square::from_rf(from_rank, from_file);
+
+            let to_file = 9 - (chars[2].to_digit(10).unwrap() as u8);
+            let to_rank = b'i' - (chars[3] as u8);
+            let to = Square::from_rf(to_rank, to_file);
+
+            let is_promo = chars.len() > 4 && chars[4] == '+';
+            Self::new_move(from, to, is_promo)
+        }
+    }
+    
+
     pub const fn to(&self) -> Square {
         Square((self.0 & SQUARE_MASK) as u8)
     }
