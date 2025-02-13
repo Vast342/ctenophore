@@ -1,3 +1,4 @@
+pub mod classical;
 mod lookups;
 
 #[cfg(not(feature = "pext"))]

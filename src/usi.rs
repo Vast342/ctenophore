@@ -79,7 +79,7 @@ impl UsiManager {
         if let Some(_moves_token) = command_split.next() {
             // loop through the rest of the moves
             for move_text in command_split {
-                let mov= Action::from_usi(move_text);
+                let mov = Action::from_usi(move_text);
                 self.board.perform_action(mov);
             }
         }

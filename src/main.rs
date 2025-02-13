@@ -5,6 +5,7 @@ use usi::UsiManager;
 pub mod board;
 pub mod movegen;
 pub mod perft;
+pub mod rays;
 pub mod types;
 pub mod usi;
 

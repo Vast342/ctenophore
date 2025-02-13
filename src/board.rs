@@ -19,6 +19,8 @@ pub struct Position {
     mailbox: [Piece; NUM_SQUARES as usize],
     hands: [Hand; 2],
     checkers: Bitboard,
+    diag_pin_mask: Bitboard,
+    orth_pin_mask: Bitboard,
 }
 
 impl Default for Position {
@@ -29,6 +31,8 @@ impl Default for Position {
             mailbox: [Piece::default(); NUM_SQUARES as usize],
             hands: [Hand::default(); 2],
             checkers: Bitboard::EMPTY,
+            diag_pin_mask: Bitboard::EMPTY,
+            orth_pin_mask: Bitboard::EMPTY,
         }
     }
 }
@@ -423,6 +427,39 @@ impl Board {
         self.states.push(state);
         self.update_checkers();
     }
+    fn is_promotable(&self, piece: Piece, sq: Square, bit: Square) -> bool {
+        piece < Piece::GOLD && (self.is_in_promotion_zone(sq) || self.is_in_promotion_zone(bit))
+    }
+
+    fn is_in_promotion_zone(&self, sq: Square) -> bool {
+        match self.stm {
+            0 => sq >= Square(54), // Player 0's promotion zone
+            1 => sq < Square(27),  // Player 1's promotion zone
+            _ => false,
+        }
+    }
+
+    fn is_out_of_bounds(&self, piece: Piece, bit: Square) -> bool {
+        (piece == Piece::LANCE && self.is_out_of_lance_bounds(bit))
+            || (piece == Piece::KNIGHT && self.is_out_of_knight_bounds(bit))
+    }
+
+    fn is_out_of_lance_bounds(&self, bit: Square) -> bool {
+        match self.stm {
+            0 => bit >= Square(72),
+            1 => bit < Square(9),
+            _ => false,
+        }
+    }
+
+    fn is_out_of_knight_bounds(&self, bit: Square) -> bool {
+        match self.stm {
+            0 => bit >= Square(63),
+            1 => bit < Square(18),
+            _ => false,
+        }
+    }
+
     pub fn get_actions(&self) -> Actionlist {
         let state = self.current_state();
         let mut actions = Actionlist::default();
@@ -454,20 +491,10 @@ impl Board {
 
             // parse to actions
             for bit in attacks {
-                if piece.piece() < Piece::GOLD
-                    && (((self.stm == 0 && bit >= Square(54))
-                        || (self.stm == 1 && bit < Square(27)))
-                        || ((self.stm == 0 && sq >= Square(54))
-                            || (self.stm == 1 && sq < Square(27))))
-                {
+                if self.is_promotable(piece.piece(), sq, bit) {
                     actions.push(Action::new_move(sq, bit, true));
                 }
-                if !(piece.piece() == Piece::LANCE
-                    && ((self.stm == 0 && bit >= Square(72)) || (self.stm == 1 && bit < Square(9))))
-                    && !(piece.piece() == Piece::KNIGHT
-                        && ((self.stm == 0 && bit >= Square(63))
-                            || (self.stm == 1 && bit < Square(18))))
-                {
+                if !self.is_out_of_bounds(piece.piece(), bit) {
                     actions.push(Action::new_move(sq, bit, false));
                 }
             }

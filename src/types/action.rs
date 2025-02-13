@@ -59,7 +59,6 @@ impl Action {
             Self::new_move(from, to, is_promo)
         }
     }
-    
 
     pub const fn to(&self) -> Square {
         Square((self.0 & SQUARE_MASK) as u8)
