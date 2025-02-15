@@ -16,7 +16,7 @@ pub fn split_perft(board: &mut Board, depth: u8) {
     println!(
         "{} nodes {} nps",
         count,
-        count as f32 / start.elapsed().as_secs_f32()
+        (count as f64 / start.elapsed().as_secs_f64()).round()
     );
 }
 
@@ -26,7 +26,7 @@ pub fn perft(board: &mut Board, depth: u8) {
     println!(
         "{} nodes {} nps",
         result,
-        result as f32 / start.elapsed().as_secs_f32()
+        (result as f64 / start.elapsed().as_secs_f64()).round()
     );
 }
 

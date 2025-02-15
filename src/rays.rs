@@ -3,20 +3,20 @@ use crate::{
     types::{bitboard::Bitboard, square::Square},
 };
 
-pub const BETWEEN_RAYS: [[Bitboard; 64]; 64] = generate_between_rays();
-pub const INTERSECTING_RAYS: [[Bitboard; 64]; 64] = generate_intersecting_rays();
+pub const BETWEEN_RAYS: [[Bitboard; 81]; 81] = generate_between_rays();
+pub const INTERSECTING_RAYS: [[Bitboard; 81]; 81] = generate_intersecting_rays();
 
-const fn generate_between_rays() -> [[Bitboard; 64]; 64] {
-    let mut table = [[Bitboard::EMPTY; 64]; 64];
+const fn generate_between_rays() -> [[Bitboard; 81]; 81] {
+    let mut table = [[Bitboard::EMPTY; 81]; 81];
     let mut src_idx = 0;
-    while src_idx < 64 {
+    while src_idx < 81 {
         let src = Square(src_idx as u8);
         let src_mask = Bitboard::from_square(src);
         let rook_attacks = get_rook_attacks_internal(src, Bitboard::EMPTY);
         let bishop_attacks = get_bishop_attacks_internal(src, Bitboard::EMPTY);
 
         let mut dst_idx = 0;
-        while dst_idx < 64 {
+        while dst_idx < 81 {
             table[src_idx][dst_idx] = if src_idx == dst_idx {
                 Bitboard::EMPTY
             } else {
@@ -40,17 +40,17 @@ const fn generate_between_rays() -> [[Bitboard; 64]; 64] {
     table
 }
 
-const fn generate_intersecting_rays() -> [[Bitboard; 64]; 64] {
-    let mut table = [[Bitboard::EMPTY; 64]; 64];
+const fn generate_intersecting_rays() -> [[Bitboard; 81]; 81] {
+    let mut table = [[Bitboard::EMPTY; 81]; 81];
     let mut src_idx = 0;
-    while src_idx < 64 {
+    while src_idx < 81 {
         let src = Square(src_idx as u8);
         let src_mask = Bitboard::from_square(src);
         let rook_attacks = get_rook_attacks_internal(src, Bitboard::EMPTY);
         let bishop_attacks = get_bishop_attacks_internal(src, Bitboard::EMPTY);
 
         let mut dst_idx = 0;
-        while dst_idx < 64 {
+        while dst_idx < 81 {
             table[src_idx][dst_idx] = if src_idx == dst_idx {
                 Bitboard::EMPTY
             } else {

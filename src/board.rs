@@ -74,6 +74,14 @@ impl Position {
     pub fn sided_piece(&self, piece: u8, side: u8) -> Bitboard {
         self.sides[side as usize] & self.pieces[piece as usize]
     }
+
+    fn get_gold_movers(&self, stm: u8) -> Bitboard {
+        self.sided_piece(Piece::GOLD.raw(), stm)
+            | self.sided_piece(Piece::PROMO_PAWN.raw(), stm)
+            | self.sided_piece(Piece::PROMO_LANCE.raw(), stm)
+            | self.sided_piece(Piece::PROMO_KNIGHT.raw(), stm)
+            | self.sided_piece(Piece::PROMO_SILVER.raw(), stm)
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -565,30 +573,29 @@ impl Board {
 
     pub fn get_attackers(&self, sq: Square) -> Bitboard {
         let opps = 1 - self.stm;
+        let state = self.current_state();
+        let occ = state.occupied();
+
         let pawn_atk_bb = Bitboard::from_square(Square(
             (sq.as_u16() as i32 + if self.stm == 0 { 9 } else { -9 }) as u8,
         ));
-        let state = self.current_state();
-        let occ = state.occupied();
-        let gold_movers = state.sided_piece(Piece::GOLD.raw(), opps)
-            | state.sided_piece(Piece::PROMO_PAWN.raw(), opps)
-            | state.sided_piece(Piece::PROMO_LANCE.raw(), opps)
-            | state.sided_piece(Piece::PROMO_KNIGHT.raw(), opps)
-            | state.sided_piece(Piece::PROMO_SILVER.raw(), opps);
+
+        let gold_movers = state.get_gold_movers(opps);
+        let bishopy_movers = state.sided_piece(Piece::BISHOP.raw(), opps)
+            | state.sided_piece(Piece::PROMO_BISHOP.raw(), opps);
+        let rooky_movers = state.sided_piece(Piece::ROOK.raw(), opps)
+            | state.sided_piece(Piece::PROMO_ROOK.raw(), opps);
+        let kingy_movers = state.sided_piece(Piece::KING.raw(), opps)
+            | state.sided_piece(Piece::PROMO_BISHOP.raw(), opps)
+            | state.sided_piece(Piece::PROMO_ROOK.raw(), opps);
+
         (pawn_atk_bb & state.sided_piece(Piece::PAWN.raw(), opps))
             | (get_lance_attacks(sq, occ, self.stm) & state.sided_piece(Piece::LANCE.raw(), opps))
             | (get_knight_attacks(sq, self.stm) & state.sided_piece(Piece::KNIGHT.raw(), opps))
             | (get_silver_attacks(sq, self.stm) & state.sided_piece(Piece::SILVER.raw(), opps))
-            | (get_bishop_attacks(sq, occ)
-                & (state.sided_piece(Piece::BISHOP.raw(), opps)
-                    | state.sided_piece(Piece::PROMO_BISHOP.raw(), opps)))
-            | (get_rook_attacks(sq, occ)
-                & (state.sided_piece(Piece::ROOK.raw(), opps)
-                    | state.sided_piece(Piece::PROMO_ROOK.raw(), opps)))
-            | (get_king_attacks(sq)
-                & (state.sided_piece(Piece::KING.raw(), opps)
-                    | state.sided_piece(Piece::PROMO_BISHOP.raw(), opps)
-                    | state.sided_piece(Piece::PROMO_ROOK.raw(), opps)))
+            | (get_bishop_attacks(sq, occ) & bishopy_movers)
+            | (get_rook_attacks(sq, occ) & rooky_movers)
+            | (get_king_attacks(sq) & kingy_movers)
             | (get_gold_attacks(sq, self.stm) & gold_movers)
     }
 
@@ -608,6 +615,65 @@ impl Board {
         let state = self.current_state_mut();
         state.checkers = king_atkers;
     }
+
+    pub fn square_attacked(&self, sq: Square, occ: Bitboard) -> bool {
+        let opp = 1 - self.stm;
+        let state = self.current_state();
+
+        let opp_bishopy = state.sided_piece(Piece::BISHOP.raw(), opp)
+            | state.sided_piece(Piece::PROMO_BISHOP.raw(), opp);
+        let opp_rooky = state.sided_piece(Piece::ROOK.raw(), opp)
+            | state.sided_piece(Piece::PROMO_ROOK.raw(), opp);
+        let opp_kingy = state.sided_piece(Piece::KING.raw(), opp)
+            | state.sided_piece(Piece::PROMO_BISHOP.raw(), opp)
+            | state.sided_piece(Piece::PROMO_ROOK.raw(), opp);
+        let gold_movers = state.get_gold_movers(opp);
+
+        let pawn_atk_bb = Bitboard::from_square(Square(
+            (sq.as_u16() as i32 + if self.stm == 0 { 9 } else { -9 }) as u8,
+        ));
+        if (pawn_atk_bb & state.sided_piece(Piece::PAWN.raw(), opp)).is_not_empty() {
+            return true;
+        }
+
+        if (get_gold_attacks(sq, self.stm) & gold_movers).is_not_empty() {
+            return true;
+        }
+
+        if (get_silver_attacks(sq, self.stm) & state.sided_piece(Piece::SILVER.raw(), opp))
+            .is_not_empty()
+        {
+            return true;
+        }
+
+        if (get_knight_attacks(sq, self.stm) & state.sided_piece(Piece::KNIGHT.raw(), opp))
+            .is_not_empty()
+        {
+            return true;
+        }
+
+        if (get_king_attacks(sq) & opp_kingy).is_not_empty() {
+            return true;
+        }
+
+        if (get_lance_attacks(sq, occ, self.stm) & state.sided_piece(Piece::LANCE.raw(), opp))
+            .is_not_empty()
+        {
+            return true;
+        }
+
+        if (get_bishop_attacks(sq, occ) & opp_bishopy).is_not_empty() {
+            return true;
+        }
+
+        if (get_rook_attacks(sq, occ) & opp_rooky).is_not_empty() {
+            return true;
+        }
+
+        false
+    }
+
+    pub fn update_pins_and_checkers(&mut self) {}
 
     pub fn perform_action(&mut self, action: Action) {
         self.states.push(*self.current_state());
